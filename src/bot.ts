@@ -64,13 +64,15 @@ const checkSubscription = async (ctx: any, next: Function) => {
    const unsubscribedChannels = await getUnsubscribedChannels(ctx);
    const chatId = ctx.from?.id;
 
-   const user = await User.findOne({ chatId: chatId });
-   if (!user) await User.create({ chatId: chatId });
+   if (chatId) {
+      const user = await User.findOne({ chatId: chatId });
+      if (!user) await User.create({ chatId: chatId });
 
-   if (unsubscribedChannels && unsubscribedChannels.length > 0 && !process.env.ADMIN_IDS?.split(',').includes(String(chatId))) {
-      await generateUnsubscribedButtons(ctx, unsubscribedChannels);
-   } else {
-      next();
+      if (unsubscribedChannels && unsubscribedChannels.length > 0 && !process.env.ADMIN_IDS?.split(',').includes(String(chatId))) {
+         await generateUnsubscribedButtons(ctx, unsubscribedChannels);
+      } else {
+         next();
+      }
    }
 };
 
