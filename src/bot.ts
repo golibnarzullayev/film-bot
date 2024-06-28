@@ -4,14 +4,13 @@ import mongoose from 'mongoose';
 import Channel, { IChannel } from './models/channel';
 import User from "./models/user";
 import Film from './models/cinema';
-import { button } from 'telegraf/typings/markup';
 
 const bot = new Telegraf(process.env.BOT_TOKEN as string);
 
 mongoose.connect(process.env.MONGO_URI as string).then();
 
 const checkAdmin = async (ctx: any, next: Function) => {
-   if (!process.env.ADMIN_IDS?.includes(ctx.from.id)) {
+   if (!process.env.ADMIN_IDS?.includes(ctx.from?.id)) {
       await ctx.reply("Nomalum buyruq!")
       return
    }
@@ -26,7 +25,6 @@ const getUnsubscribedChannels = async (ctx: Context): Promise<Array<{
 }> | undefined> => {
    const channels = await Channel.find<IChannel>().lean().exec();
    const unsubscribedChannels = [];
-   const chatId = ctx.from?.id as any as string;
 
    for (const channel of channels) {
       try {
@@ -64,7 +62,7 @@ const generateUnsubscribedButtons = async (ctx: Context, channels: Array<{ chann
 
 const checkSubscription = async (ctx: any, next: Function) => {
    const unsubscribedChannels = await getUnsubscribedChannels(ctx);
-   const chatId = ctx.from.id;
+   const chatId = ctx.from?.id;
 
    const user = await User.findOne({ chatId: chatId });
    if (!user) await User.create({ chatId: chatId });
