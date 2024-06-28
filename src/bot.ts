@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import Channel, { IChannel } from './models/channel';
 import User from "./models/user";
 import Film from './models/cinema';
+import { button } from 'telegraf/typings/markup';
 
 const bot = new Telegraf(process.env.BOT_TOKEN as string);
 
@@ -54,7 +55,7 @@ const generateUnsubscribedButtons = async (ctx: Context, channels: Array<{ chann
    await ctx.reply('Iltimos, quyidagi kanallarga obuna bo\'ling:', {
       reply_markup: {
          inline_keyboard: [
-            [...buttons],
+            ...buttons.map(button => [button]),
             [{ text: "A'zo bo'ldim ✅", callback_data: 'check_subscription' }]
          ]
       }
