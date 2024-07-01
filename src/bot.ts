@@ -10,12 +10,14 @@ const bot = new Telegraf(process.env.BOT_TOKEN as string);
 mongoose.connect(process.env.MONGO_URI as string).then();
 
 const checkAdmin = async (ctx: any, next: Function) => {
-   if (!process.env.ADMIN_IDS?.includes(ctx.from?.id)) {
-      await ctx.reply("Nomalum buyruq!")
-      return
-   }
+   try {
+      if (!process.env.ADMIN_IDS?.includes(ctx.from?.id)) {
+         await ctx.reply("Nomalum buyruq!")
+         return
+      }
 
-   next()
+      next()
+   } catch (error) { }
 }
 
 const getUnsubscribedChannels = async (ctx: Context): Promise<Array<{
@@ -23,57 +25,63 @@ const getUnsubscribedChannels = async (ctx: Context): Promise<Array<{
    name: string,
    username: string
 }> | undefined> => {
-   const channels = await Channel.find<IChannel>().lean().exec();
-   const unsubscribedChannels = [];
+   try {
+      const channels = await Channel.find<IChannel>().lean().exec();
+      const unsubscribedChannels = [];
 
-   for (const channel of channels) {
-      try {
-         const userId = ctx.from?.id;
-         if (userId) {
-            const chatMember = await ctx.telegram.getChatMember(channel.chatId, userId);
-            if (chatMember.status === 'left' || chatMember.status === 'kicked') {
-               unsubscribedChannels.push({
-                  channelId: channel.chatId,
-                  name: channel.name,
-                  username: channel.username,
-               });
+      for (const channel of channels) {
+         try {
+            const userId = ctx.from?.id;
+            if (userId) {
+               const chatMember = await ctx.telegram.getChatMember(channel.chatId, userId);
+               if (chatMember.status === 'left' || chatMember.status === 'kicked') {
+                  unsubscribedChannels.push({
+                     channelId: channel.chatId,
+                     name: channel.name,
+                     username: channel.username,
+                  });
+               }
             }
-         }
-      } catch (error) { }
-   }
-   return unsubscribedChannels;
+         } catch (error) { }
+      }
+      return unsubscribedChannels;
+   } catch (error) { }
 };
 
 const generateUnsubscribedButtons = async (ctx: Context, channels: Array<{ channelId: string, name: string, username: string }>) => {
-   const buttons = channels.map(channel => ({
-      text: channel.name,
-      url: `https://t.me/${channel.username}`,
-   }));
+   try {
+      const buttons = channels.map(channel => ({
+         text: channel.name,
+         url: `https://t.me/${channel.username}`,
+      }));
 
-   await ctx.reply('Iltimos, quyidagi kanallarga obuna bo\'ling:', {
-      reply_markup: {
-         inline_keyboard: [
-            ...buttons.map(button => [button]),
-            [{ text: "A'zo bo'ldim ✅", callback_data: 'check_subscription' }]
-         ]
-      }
-   });
+      await ctx.reply('Iltimos, quyidagi kanallarga obuna bo\'ling:', {
+         reply_markup: {
+            inline_keyboard: [
+               ...buttons.map(button => [button]),
+               [{ text: "A'zo bo'ldim ✅", callback_data: 'check_subscription' }]
+            ]
+         }
+      });
+   } catch (error) { }
 }
 
 const checkSubscription = async (ctx: any, next: Function) => {
-   const unsubscribedChannels = await getUnsubscribedChannels(ctx);
-   const chatId = ctx.from?.id;
+   try {
+      const unsubscribedChannels = await getUnsubscribedChannels(ctx);
+      const chatId = ctx.from?.id;
 
-   if (chatId) {
-      const user = await User.findOne({ chatId: chatId });
-      if (!user) await User.create({ chatId: chatId });
+      if (chatId) {
+         const user = await User.findOne({ chatId: chatId });
+         if (!user) await User.create({ chatId: chatId });
 
-      if (unsubscribedChannels && unsubscribedChannels.length > 0 && !process.env.ADMIN_IDS?.split(',').includes(String(chatId))) {
-         await generateUnsubscribedButtons(ctx, unsubscribedChannels);
-      } else {
-         next();
+         if (unsubscribedChannels && unsubscribedChannels.length > 0 && !process.env.ADMIN_IDS?.split(',').includes(String(chatId))) {
+            await generateUnsubscribedButtons(ctx, unsubscribedChannels);
+         } else {
+            next();
+         }
       }
-   }
+   } catch (error) { }
 };
 
 bot.use(checkSubscription);
@@ -83,13 +91,15 @@ bot.start(async (ctx) => {
 });
 
 bot.action('check_subscription', async (ctx) => {
-   const unsubscribedChannels = await getUnsubscribedChannels(ctx);
+   try {
+      const unsubscribedChannels = await getUnsubscribedChannels(ctx);
 
-   if (unsubscribedChannels && unsubscribedChannels.length === 0) {
-      await ctx.reply('Rahmat! Endi botdan to\'liq foydalanishingiz mumkin.');
-   } else if (unsubscribedChannels) {
-      await generateUnsubscribedButtons(ctx, unsubscribedChannels);
-   }
+      if (unsubscribedChannels && unsubscribedChannels.length === 0) {
+         await ctx.reply('Rahmat! Endi botdan to\'liq foydalanishingiz mumkin.');
+      } else if (unsubscribedChannels) {
+         await generateUnsubscribedButtons(ctx, unsubscribedChannels);
+      }
+   } catch (error) { }
 });
 
 bot.command('add_channel', checkAdmin, async (ctx) => {
@@ -122,9 +132,11 @@ bot.command('add_channel', checkAdmin, async (ctx) => {
 });
 
 bot.command('list_channels', checkAdmin, async (ctx) => {
-   const channels = await Channel.find();
-   const channelList = channels.map((channel, index) => `${index + 1}. ${channel.name}`).join('\n');
-   await ctx.replyWithHTML(`Qo'shilgan kanallar:\n<b>${channelList}</b>`);
+   try {
+      const channels = await Channel.find();
+      const channelList = channels.map((channel, index) => `${index + 1}. ${channel.name}`).join('\n');
+      await ctx.replyWithHTML(`Qo'shilgan kanallar:\n<b>${channelList}</b>`);
+   } catch (error) { }
 });
 
 bot.command('delete_channel', checkAdmin, async (ctx) => {
@@ -178,17 +190,26 @@ bot.command('add_film', checkAdmin, async (ctx) => {
 });
 
 bot.hears(/^\d+$/, async (ctx) => {
-   const code = ctx.message.text;
-   const film = await Film.findOne({ code: Number(code) });
+   try {
+      const code = ctx.message.text;
+      const film = await Film.findOne({ code: Number(code) });
 
-   if (!film) {
-      await ctx.reply('Kino topilmadi!');
-      return;
-   }
+      if (!film) {
+         await ctx.reply('Kino topilmadi!');
+         return;
+      }
 
-   await ctx.replyWithVideo(film.url, {
-      caption: film.name
-   });
+      await ctx.replyWithVideo(film.url, {
+         caption: film.name
+      });
+   } catch (error) { }
 })
 
-bot.launch().then();
+process.on('unhandledRejection', (reason, _) => {
+   console.error(`Rejection: ${reason}`, { type: 'rejection' });
+});
+process.on('uncaughtException', error => {
+   console.error(`Exception: ${error.message}`, { type: 'exception' });
+});
+
+bot.launch();
