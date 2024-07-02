@@ -189,6 +189,13 @@ bot.command('add_film', checkAdmin, async (ctx) => {
    }
 });
 
+bot.command('stat', checkAdmin, async (ctx) => {
+   const countUser = await User.estimatedDocumentCount();
+   const message = `Jami foydalanuvchilar soni: ${countUser}`;
+
+   await ctx.reply(message);
+})
+
 bot.hears(/^\d+$/, async (ctx) => {
    try {
       const code = ctx.message.text;
