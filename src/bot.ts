@@ -190,10 +190,12 @@ bot.command('add_film', checkAdmin, async (ctx) => {
 });
 
 bot.command('stat', checkAdmin, async (ctx) => {
-   const countUser = await User.estimatedDocumentCount();
-   const message = `Jami foydalanuvchilar soni: ${countUser}`;
+   try {
+      const countUser = await User.estimatedDocumentCount();
+      const message = `Jami foydalanuvchilar soni: ${countUser}`;
 
-   await ctx.reply(message);
+      await ctx.reply(message);
+   } catch (error) { }
 })
 
 bot.hears(/^\d+$/, async (ctx) => {
@@ -209,7 +211,9 @@ bot.hears(/^\d+$/, async (ctx) => {
       await ctx.replyWithVideo(film.url, {
          caption: film.name
       });
-   } catch (error) { }
+   } catch (error) {
+      await ctx.reply('Kino topilmadi!');
+   }
 })
 
 process.on('unhandledRejection', (reason, _) => {
