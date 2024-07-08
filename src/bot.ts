@@ -164,7 +164,7 @@ bot.command('add_film', checkAdmin, async (ctx) => {
    }
 
    if (Number.isNaN(code)) {
-      await ctx.reply("Koni kodi son bo'lishi kerak")
+      await ctx.reply("Kino kodi son bo'lishi kerak")
       return;
    }
 
@@ -188,6 +188,29 @@ bot.command('add_film', checkAdmin, async (ctx) => {
       await ctx.reply('Kinoni qo\'shishda xatolik yuz berdi.');
    }
 });
+
+bot.command('delete_film', checkAdmin, async (ctx) => {
+   const [_, code] = ctx.message.text.split(' ');
+
+   if (!code) return ctx.reply('Iltimos, film kodini kiriting: /delete_film 1');
+
+   if (Number.isNaN(code)) {
+      await ctx.reply("Kino kodi son bo'lishi kerak")
+      return;
+   }
+
+   try {
+      const film = await Film.findOne({ code: Number(code) });
+      if (!film) {
+         await ctx.reply("Bunday kino mavjud emas.");
+         return;
+      }
+
+      await Film.deleteOne({ code });
+   } catch (error) {
+      await ctx.reply("Kinoni o'chirishda xatolik yuz berdi.");
+   }
+})
 
 bot.command('stat', checkAdmin, async (ctx) => {
    try {
