@@ -63,9 +63,7 @@ const generateUnsubscribedButtons = async (
   try {
     const buttons = channels.map((channel) => ({
       text: channel.name,
-      url: channel.username.includes("instagram")
-        ? channel.username
-        : `https://t.me/${channel.username}`,
+      url: `https://t.me/${channel.username}`,
     }));
 
     await ctx.reply("Iltimos, quyidagi kanallarga obuna bo'ling:", {
@@ -82,15 +80,6 @@ const generateUnsubscribedButtons = async (
 const checkSubscription = async (ctx: any, next: Function) => {
   try {
     const unsubscribedChannels = (await getUnsubscribedChannels(ctx)) || [];
-    unsubscribedChannels.unshift({
-      channelId: "1212213214",
-      name: "Instagram - aeba_025",
-      username: "https://www.instagram.com/aeba_025",
-    });
-
-    const isInstagramUrl =
-      unsubscribedChannels.length === 1 &&
-      unsubscribedChannels[0].username.includes("instagram");
 
     const chatId = ctx.from?.id;
 
@@ -101,8 +90,7 @@ const checkSubscription = async (ctx: any, next: Function) => {
       if (
         unsubscribedChannels &&
         unsubscribedChannels.length > 0 &&
-        !process.env.ADMIN_IDS?.split(",").includes(String(chatId)) &&
-        !isInstagramUrl
+        !process.env.ADMIN_IDS?.split(",").includes(String(chatId))
       ) {
         await generateUnsubscribedButtons(ctx, unsubscribedChannels);
       } else {
