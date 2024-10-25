@@ -84,7 +84,7 @@ const checkSubscription = async (ctx: any, next: Function) => {
     const unsubscribedChannels = (await getUnsubscribedChannels(ctx)) || [];
     unsubscribedChannels.unshift({
       channelId: "1212213214",
-      name: "Instagram",
+      name: "Instagram - aeba_025",
       username: "https://www.instagram.com/aeba_025",
     });
 
